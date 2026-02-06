@@ -4,8 +4,8 @@ import AdminPanel from './components/admin/AdminPanel';
 import ScheduleGrid from './components/schedule/ScheduleGrid';
 import ScheduleList from './components/schedule/ScheduleList';
 import DateStrip from './components/schedule/DateStrip';
-import { User, ClassSession, HeaderConfig, Rating, SUPER_ADMIN_EMAIL, AppNotification } from './types';
-import { sheetAPI } from './api/sheets';
+import { User, ClassSession, HeaderConfig, Rating, SUPER_ADMIN_EMAIL, AppNotification } from './types'; // ĐÃ XÓA .ts
+import { sheetAPI } from './api/sheets'; // ĐÃ XÓA .ts
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -25,7 +25,6 @@ const App: React.FC = () => {
     website: 'www.ciputraclub.vn'
   });
 
-  // Tải dữ liệu từ Google Sheets khi mở App
   const loadData = async () => {
     setLoading(true);
     const data = await sheetAPI.getAllData();
@@ -42,11 +41,9 @@ const App: React.FC = () => {
 
   const handleGoogleLogin = async (email: string, name: string, photo: string) => {
     let existingUser = allUsers.find(u => u.email === email);
-    
     if (!existingUser) {
       const role = email === SUPER_ADMIN_EMAIL ? 'ADMIN' : 'USER';
       existingUser = { id: Date.now().toString(), email, name, avatar: photo, role };
-      // Lưu user mới lên Sheet ngay lập tức
       await sheetAPI.updateUserRole(email, role, name, photo);
       setAllUsers([...allUsers, existingUser]);
     }
@@ -63,46 +60,26 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       <Header config={config} user={user} onGoogleLogin={handleGoogleLogin} onLogout={() => setUser(null)} onToggleAdmin={() => setShowAdmin(true)} />
-      
       <main className="max-w-[1440px] mx-auto px-4 py-6">
         <div className="text-center mb-8">
           <h2 className="text-2xl lg:text-4xl font-black text-teal-900 uppercase">{config.scheduleTitle}</h2>
           <div className="inline-block px-4 py-1 bg-teal-100 text-teal-700 rounded-full text-[10px] font-black mt-2">DỮ LIỆU TRỰC TUYẾN</div>
         </div>
-
-        {/* Desktop View */}
         <div className="hidden lg:block">
           <ScheduleGrid schedule={schedule} user={user} onUpdate={async (newS) => { setSchedule(newS); await sheetAPI.updateSchedule(newS); }} onNotify={async (m, t) => { await sheetAPI.sendNotification(m, t); loadData(); }} />
         </div>
-
-        {/* Mobile View */}
         <div className="lg:hidden space-y-4">
           <DateStrip activeDay={activeDay} onSelect={setActiveDay} />
           <ScheduleList dayIndex={activeDay} schedule={schedule} user={user} onUpdate={async (newS) => { setSchedule(newS); await sheetAPI.updateSchedule(newS); }} />
         </div>
       </main>
-
       {showAdmin && (
         <AdminPanel 
-          user={user} 
-          headerConfig={config} 
-          onUpdateHeader={() => {}} 
-          onClose={() => setShowAdmin(false)} 
-          registeredUsers={allUsers}
-          schedule={schedule}
-          ratings={ratings}
-          onUpdateUserRole={async (email, role) => {
-            await sheetAPI.updateUserRole(email, role);
-            loadData();
-          }}
-          onUpdateSchedule={async (newS) => {
-            setSchedule(newS);
-            await sheetAPI.updateSchedule(newS);
-          }}
-          onNotify={async (m, t) => {
-            await sheetAPI.sendNotification(m, t);
-            loadData();
-          }}
+          user={user} headerConfig={config} onUpdateHeader={() => {}} onClose={() => setShowAdmin(false)} 
+          registeredUsers={allUsers} schedule={schedule} ratings={ratings}
+          onUpdateUserRole={async (email, role) => { await sheetAPI.updateUserRole(email, role); loadData(); }}
+          onUpdateSchedule={async (newS) => { setSchedule(newS); await sheetAPI.updateSchedule(newS); }}
+          onNotify={async (m, t) => { await sheetAPI.sendNotification(m, t); loadData(); }}
         />
       )}
     </div>
