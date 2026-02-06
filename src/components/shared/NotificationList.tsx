@@ -1,27 +1,26 @@
 import React from 'react';
 import { AppNotification } from '../../types';
-import { Bell, AlertTriangle } from 'lucide-react';
 
 interface Props {
   notifications: AppNotification[];
 }
 
 const NotificationList: React.FC<Props> = ({ notifications }) => {
-  if (notifications.length === 0) return null;
+  if (!notifications || notifications.length === 0) return null;
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 mb-6">
-      <div className="bg-amber-50 rounded-[2rem] p-4 border border-amber-100 space-y-2">
-        {notifications.slice(0, 3).map(n => (
-          <div key={n.id} className="flex items-start gap-3 p-2">
-            {n.type === 'ALERT' ? <AlertTriangle size={16} className="text-red-500 mt-1" /> : <Bell size={16} className="text-amber-600 mt-1" />}
+    <div className="mb-8 space-y-2">
+      {notifications.slice(0, 2).map(n => (
+        <div key={n.id} className={`${n.type === 'ALERT' ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100'} p-4 rounded-2xl border flex items-center justify-between animate-pulse`}>
+          <div className="flex items-center gap-3">
+            <span className="text-xl">{n.type === 'ALERT' ? '🚨' : '📢'}</span>
             <div>
-              <p className="text-xs font-bold text-amber-900">{n.message}</p>
-              <p className="text-[8px] font-black text-amber-500 uppercase">{n.createdAt}</p>
+              <p className={`text-xs font-black uppercase ${n.type === 'ALERT' ? 'text-red-900' : 'text-amber-900'}`}>{n.message}</p>
+              <p className="text-[8px] font-bold opacity-50">{n.createdAt}</p>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 };
