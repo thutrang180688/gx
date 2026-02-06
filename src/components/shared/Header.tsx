@@ -25,7 +25,7 @@ const Header: React.FC<Props> = ({ config, user, onGoogleLogin, onLogout, onTogg
       const initGoogle = () => {
         if (window.google?.accounts) {
           window.google.accounts.id.initialize({
-            client_id: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+            client_id: "882743803439-1c1qoa24f5cvn0ir99i1b465qg3r8qgs.apps.googleusercontent.com",
             callback: handleResponse,
           });
           window.google.accounts.id.renderButton(document.getElementById("googleBtn"), { theme: "outline", size: "large", width: "100%" });
