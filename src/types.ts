@@ -1,4 +1,6 @@
 export type Role = 'ADMIN' | 'MANAGER' | 'USER';
+export type Category = 'YOGA' | 'TAICHI' | 'DANCE' | 'OTHER';
+export type ClassStatus = 'NORMAL' | 'CANCELLED' | 'SUBSTITUTE';
 
 export interface User {
   id: string;
@@ -7,9 +9,6 @@ export interface User {
   avatar: string;
   role: Role;
 }
-
-export type Category = 'YOGA' | 'TAICHI' | 'DANCE' | 'OTHER';
-export type ClassStatus = 'NORMAL' | 'CANCELLED' | 'SUBSTITUTE';
 
 export interface ClassSession {
   id: string;
@@ -23,11 +22,10 @@ export interface ClassSession {
 
 export interface Rating {
   id: string;
-  userEmail: string;
-  userName: string;
   instructor: string;
-  rating: number; 
+  rating: number;
   comment: string;
+  userName: string;
   createdAt: string;
 }
 
@@ -46,6 +44,8 @@ export interface HeaderConfig {
   website: string;
 }
 
+export const SUPER_ADMIN_EMAIL = 'thutrang180688@gmail.com';
+
 export const DAYS_OF_WEEK = [
   { vn: 'Thứ 2', eng: 'Monday' },
   { vn: 'Thứ 3', eng: 'Tuesday' },
@@ -53,14 +53,12 @@ export const DAYS_OF_WEEK = [
   { vn: 'Thứ 5', eng: 'Thursday' },
   { vn: 'Thứ 6', eng: 'Friday' },
   { vn: 'Thứ 7', eng: 'Saturday' },
-  { vn: 'Chủ Nhật', eng: 'Sunday' }
+  { vn: 'Chủ Nhật', eng: 'Sunday' },
 ];
 
 export const CATEGORY_COLORS: Record<Category, string> = {
-  YOGA: 'bg-blue-600',
-  TAICHI: 'bg-emerald-600',
-  DANCE: 'bg-orange-600',
-  OTHER: 'bg-purple-600'
+  YOGA: 'bg-blue-500',
+  TAICHI: 'bg-emerald-500',
+  DANCE: 'bg-orange-500',
+  OTHER: 'bg-purple-500',
 };
-
-export const SUPER_ADMIN_EMAIL = 'thutrang180688@gmail.com';
