@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
-import { ClassSession, User, DAYS_OF_WEEK, CATEGORY_COLORS } from '../types';
-import ClassModal from './ClassModal';
+import { ClassSession, User, CATEGORY_COLORS, DAYS_OF_WEEK } from '../../types';
+import ClassModal from '../shared/ClassModal';
 
 interface Props {
   schedule: ClassSession[];
@@ -11,52 +10,69 @@ interface Props {
 }
 
 const ScheduleGrid: React.FC<Props> = ({ schedule, user, onUpdate, onNotify }) => {
-  const [editing, setEditing] = useState<ClassSession | null>(null);
+  const [selectedClass, setSelectedClass] = useState<ClassSession | null>(null);
   const isManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
-  const handleSave = (s: ClassSession, notify: boolean) => {
-    const updated = schedule.find(x => x.id === s.id) ? schedule.map(x => x.id === s.id ? s : x) : [...schedule, {...s, id: Date.now().toString()}];
-    onUpdate(updated);
-    
-    if (notify) {
-      const statusText = s.status === 'CANCELLED' ? 'đã bị HỦY' : s.status === 'SUBSTITUTE' ? 'có thay đổi giáo viên' : 'đã được cập nhật';
-      onNotify(`Thông báo: Lớp ${s.className} lúc ${s.time} ${statusText}. Quý hội viên lưu ý!`, s.status === 'CANCELLED' ? 'ALERT' : 'INFO');
-    }
-    setEditing(null);
-  };
+  const timeSlots = Array.from(new Set(schedule.map(s => s.time))).sort();
 
   return (
-    <div className="bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-gray-200">
-      <div className="grid grid-cols-7 bg-teal-900 text-white border-b-4 border-teal-800">
-        {DAYS_OF_WEEK.map((day, idx) => (
-          <div key={idx} className="p-4 text-center border-r border-teal-800/50 last:border-0">
-            <div className="text-[10px] font-light text-teal-300 uppercase">{day.eng}</div>
-            <div className="text-lg font-black">{day.vn.toUpperCase()}</div>
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 divide-x divide-gray-100 bg-slate-50 min-h-[600px]">
-        {DAYS_OF_WEEK.map((_, dayIdx) => (
-          <div key={dayIdx} className="p-3 space-y-3">
-            {schedule.filter(s => s.dayIndex === dayIdx).sort((a, b) => a.time.localeCompare(b.time)).map(session => (
-              <div 
-                key={session.id} 
-                onClick={() => isManager && setEditing(session)}
-                className={`p-3 bg-white rounded-2xl border border-gray-200 shadow-sm ${isManager ? 'cursor-pointer hover:scale-[1.03]' : ''} transition-all relative group`}
-              >
-                <div className="text-[9px] font-black text-gray-400 text-center mb-1">{session.time}</div>
-                <div className={`text-[10px] font-black text-white text-center py-1 rounded-xl uppercase ${CATEGORY_COLORS[session.category]}`}>{session.className}</div>
-                <div className="text-[10px] font-black text-teal-800 text-center mt-1 uppercase">{session.instructor}</div>
-                {session.status !== 'NORMAL' && (
-                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[7px] font-bold px-1 rounded uppercase shadow-sm z-10">{session.status === 'CANCELLED' ? 'HỦY' : 'THAY'}</span>
-                )}
-                {isManager && <div className="absolute inset-0 bg-teal-900/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center"><span className="text-[8px] bg-white px-2 py-1 rounded-full font-black text-teal-900 shadow-sm">CHỈNH SỬA</span></div>}
-              </div>
+    <div className="overflow-x-auto bg-white rounded-[2rem] shadow-2xl border border-teal-100">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-teal-900 text-white">
+            <th className="p-6 text-left font-black uppercase tracking-widest text-xs border-r border-teal-800">Thời gian</th>
+            {DAYS_OF_WEEK.map((day, index) => (
+              <th key={index} className="p-6 text-center font-black uppercase tracking-widest text-xs border-r border-teal-800 last:border-0">
+                {day.vn}
+                <span className="block text-[8px] text-teal-400 font-medium">{day.eng}</span>
+              </th>
             ))}
-          </div>
-        ))}
-      </div>
-      {editing && <ClassModal session={editing} onClose={() => setEditing(null)} onSave={handleSave} onDelete={(id) => { onUpdate(schedule.filter(x => x.id !== id)); setEditing(null); }} />}
+          </tr>
+        </thead>
+        <tbody>
+          {timeSlots.map(time => (
+            <tr key={time} className="border-b border-teal-50 last:border-0">
+              <td className="p-4 font-black text-teal-900 text-sm bg-teal-50/30 border-r border-teal-50 text-center">{time}</td>
+              {DAYS_OF_WEEK.map((_, dayIdx) => {
+                const session = schedule.find(s => s.time === time && s.dayIndex === dayIdx);
+                return (
+                  <td key={dayIdx} className="p-2 border-r border-teal-50 last:border-0 min-w-[150px]">
+                    {session ? (
+                      <div 
+                        onClick={() => setSelectedClass(session)}
+                        className={`${CATEGORY_COLORS[session.category]} p-3 rounded-2xl text-white shadow-lg cursor-pointer transform hover:scale-105 transition-all`}
+                      >
+                        <p className="text-[10px] font-black uppercase leading-tight">{session.className}</p>
+                        <p className="text-[8px] font-bold opacity-80 mt-1 uppercase tracking-tighter">GV: {session.instructor}</p>
+                        {session.status !== 'NORMAL' && (
+                          <div className="mt-2 bg-white/20 py-0.5 px-2 rounded-full text-[7px] font-black inline-block uppercase">
+                            {session.status === 'CANCELLED' ? 'Hủy lớp' : 'Thay GV'}
+                          </div>
+                        )}
+                      </div>
+                    ) : isManager ? (
+                      <button className="w-full py-4 border-2 border-dashed border-teal-100 rounded-2xl text-teal-200 hover:border-teal-300 hover:text-teal-400 transition-colors">+</button>
+                    ) : null}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {selectedClass && (
+        <ClassModal 
+          session={selectedClass} 
+          user={user} 
+          onClose={() => setSelectedClass(null)} 
+          onUpdate={(updated) => {
+            const newSchedule = schedule.map(s => s.id === updated.id ? updated : s);
+            onUpdate(newSchedule);
+            if(updated.status !== 'NORMAL') onNotify(`Lớp ${updated.className} ${updated.time} có thay đổi!`, 'ALERT');
+            setSelectedClass(null);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -1,6 +1,6 @@
-
-import React from 'react';
-import { ClassSession, User, CATEGORY_COLORS } from '../types';
+import React, { useState } from 'react';
+import { ClassSession, User, CATEGORY_COLORS } from '../../types';
+import ClassModal from '../shared/ClassModal';
 
 interface Props {
   dayIndex: number;
@@ -10,27 +10,46 @@ interface Props {
 }
 
 const ScheduleList: React.FC<Props> = ({ dayIndex, schedule, user, onUpdate }) => {
-  const classes = schedule.filter(s => s.dayIndex === dayIndex).sort((a, b) => a.time.localeCompare(b.time));
+  const [selectedClass, setSelectedClass] = useState<ClassSession | null>(null);
+  const dayClasses = schedule
+    .filter(s => s.dayIndex === dayIndex)
+    .sort((a, b) => a.time.localeCompare(b.time));
 
   return (
-    <div className="px-4 space-y-4 pb-8">
-      {classes.length === 0 ? (
-        <div className="bg-white rounded-3xl p-10 text-center border-2 border-dashed border-gray-200 text-gray-400 font-bold uppercase text-sm">Nghỉ ngơi thôi!</div>
-      ) : (
-        classes.map(session => (
-          <div key={session.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 flex overflow-hidden animate-fade">
-            <div className={`w-3 ${CATEGORY_COLORS[session.category]}`} />
-            <div className="flex-1 p-5">
-              <div className="flex justify-between items-center mb-1">
-                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{session.time}</span>
-                 {session.status !== 'NORMAL' && <span className="bg-red-100 text-red-600 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">{session.status === 'CANCELLED' ? 'HỦY LỚP' : 'DẠY THAY'}</span>}
-              </div>
-              <h3 className="text-xl font-black text-teal-900 leading-tight uppercase">{session.className}</h3>
-              <p className="text-gray-500 font-bold text-sm uppercase mt-1">HLV: {session.instructor}</p>
-              <button className="mt-4 w-full bg-teal-50 text-teal-700 py-2 rounded-2xl text-[10px] font-black uppercase tracking-wider">🔔 Nhắc Tôi</button>
+    <div className="space-y-3 px-1">
+      {dayClasses.map(session => (
+        <div 
+          key={session.id}
+          onClick={() => setSelectedClass(session)}
+          className="bg-white p-4 rounded-[1.5rem] shadow-sm flex items-center justify-between border border-teal-50 active:scale-95 transition-transform"
+        >
+          <div className="flex items-center gap-4">
+            <div className="text-center min-w-[60px]">
+              <p className="text-xs font-black text-teal-900 leading-none">{session.time}</p>
+              <div className={`h-1 w-full mt-1 rounded-full ${CATEGORY_COLORS[session.category]}`}></div>
+            </div>
+            <div>
+              <p className="text-xs font-black text-teal-900 uppercase">{session.className}</p>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">GV: {session.instructor}</p>
             </div>
           </div>
-        ))
+          {session.status !== 'NORMAL' && (
+            <span className={`text-[8px] font-black px-2 py-1 rounded-full uppercase ${session.status === 'CANCELLED' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
+              {session.status === 'CANCELLED' ? 'Hủy' : 'Đổi GV'}
+            </span>
+          )}
+        </div>
+      ))}
+      {selectedClass && (
+        <ClassModal 
+          session={selectedClass} 
+          user={user} 
+          onClose={() => setSelectedClass(null)} 
+          onUpdate={(updated) => {
+            onUpdate(schedule.map(s => s.id === updated.id ? updated : s));
+            setSelectedClass(null);
+          }}
+        />
       )}
     </div>
   );
