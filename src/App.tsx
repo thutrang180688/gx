@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import Header from './components/Header';
-import AdminPanel from './components/AdminPanel';
-import ScheduleGrid from './components/ScheduleGrid';
-import ScheduleList from './components/ScheduleList';
-import DateStrip from './components/DateStrip';
-import NotificationList from './components/NotificationList';
+// Sửa lại đường dẫn import đúng cấu trúc thư mục của bạn
+import Header from './components/layout/Header';
+import AdminPanel from './components/admin/AdminPanel';
+import ScheduleGrid from './components/schedule/ScheduleGrid';
+import ScheduleList from './components/schedule/ScheduleList';
+import DateStrip from './components/schedule/DateStrip';
+import NotificationList from './components/notifications/NotificationList';
 import { User, ClassSession, HeaderConfig, Rating, SUPER_ADMIN_EMAIL, AppNotification } from './types';
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-ZHIwmy3vZ2zNWOuzXsZ6XIybiLJdqckhLN0mFexs1u7BnynWKSaHMZo6gGxtkSj3Ag/exec';
@@ -27,7 +28,6 @@ const App: React.FC = () => {
     website: 'www.ciputraclub.vn'
   });
 
-  // Tải dữ liệu ban đầu
   useEffect(() => {
     const savedUser = localStorage.getItem('gx_user');
     if (savedUser) setUser(JSON.parse(savedUser));
@@ -43,14 +43,13 @@ const App: React.FC = () => {
       setRatings(data.ratings || []);
       setNotifications(data.notifications || []);
     } catch (e) {
-      console.error("Lỗi kết nối Google Sheets:", e);
+      console.error("Lỗi kết nối:", e);
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async (email: string, name: string, photo: string) => {
-    // Ưu tiên check role từ danh sách user đã lưu trên Sheet
     const existingUser = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
     let role: any = 'USER';
     if (email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) role = 'ADMIN';
@@ -60,7 +59,6 @@ const App: React.FC = () => {
     setUser(loggedInUser);
     localStorage.setItem('gx_user', JSON.stringify(loggedInUser));
 
-    // Đồng bộ user lên Sheet
     await fetch(SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -81,6 +79,7 @@ const App: React.FC = () => {
       mode: 'no-cors',
       body: JSON.stringify({ action: 'updateSchedule', schedule: newSchedule })
     });
+    fetchData(); // Tải lại để đồng bộ
   };
 
   const onNotify = async (msg: string, type: 'INFO' | 'ALERT') => {
@@ -96,7 +95,7 @@ const App: React.FC = () => {
   if (loading) return (
     <div className="h-screen flex flex-col items-center justify-center bg-teal-900 text-white">
       <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mb-4"></div>
-      <p className="font-black text-xs uppercase tracking-widest">Đang kết nối Google Sheets...</p>
+      <p className="font-black text-xs uppercase tracking-widest">Đang kết nối Database...</p>
     </div>
   );
 
