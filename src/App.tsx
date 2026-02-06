@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-// Sửa lại đường dẫn import đúng cấu trúc thư mục của bạn
-import Header from './components/layout/Header';
-import AdminPanel from './components/admin/AdminPanel';
-import ScheduleGrid from './components/schedule/ScheduleGrid';
-import ScheduleList from './components/schedule/ScheduleList';
-import DateStrip from './components/schedule/DateStrip';
-import NotificationList from './components/notifications/NotificationList';
+// Sửa lại import: Viết hoa chữ cái đầu của thư mục để khớp với cấu trúc chuẩn React
+import Header from './components/Layout/Header';
+import AdminPanel from './components/Admin/AdminPanel';
+import ScheduleGrid from './components/Schedule/ScheduleGrid';
+import ScheduleList from './components/Schedule/ScheduleList';
+import DateStrip from './components/Schedule/DateStrip';
+import NotificationList from './components/Notifications/NotificationList';
 import { User, ClassSession, HeaderConfig, Rating, SUPER_ADMIN_EMAIL, AppNotification } from './types';
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-ZHIwmy3vZ2zNWOuzXsZ6XIybiLJdqckhLN0mFexs1u7BnynWKSaHMZo6gGxtkSj3Ag/exec';
@@ -79,7 +79,7 @@ const App: React.FC = () => {
       mode: 'no-cors',
       body: JSON.stringify({ action: 'updateSchedule', schedule: newSchedule })
     });
-    fetchData(); // Tải lại để đồng bộ
+    fetchData();
   };
 
   const onNotify = async (msg: string, type: 'INFO' | 'ALERT') => {
