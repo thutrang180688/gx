@@ -4,8 +4,8 @@ import AdminPanel from './components/admin/AdminPanel';
 import ScheduleGrid from './components/schedule/ScheduleGrid';
 import ScheduleList from './components/schedule/ScheduleList';
 import DateStrip from './components/schedule/DateStrip';
-import { User, ClassSession, HeaderConfig, Rating, SUPER_ADMIN_EMAIL, AppNotification } from './types'; // ĐÃ XÓA .ts
-import { sheetAPI } from './api/sheets'; // ĐÃ XÓA .ts
+import { User, ClassSession, HeaderConfig, Rating, SUPER_ADMIN_EMAIL, AppNotification } from './types';
+import { sheetAPI } from './api/sheets';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -26,7 +26,6 @@ const App: React.FC = () => {
   });
 
   const loadData = async () => {
-    setLoading(true);
     const data = await sheetAPI.getAllData();
     if (data) {
       setSchedule(data.schedule || []);
@@ -40,46 +39,89 @@ const App: React.FC = () => {
   useEffect(() => { loadData(); }, []);
 
   const handleGoogleLogin = async (email: string, name: string, photo: string) => {
-    let existingUser = allUsers.find(u => u.email === email);
-    if (!existingUser) {
-      const role = email === SUPER_ADMIN_EMAIL ? 'ADMIN' : 'USER';
-      existingUser = { id: Date.now().toString(), email, name, avatar: photo, role };
-      await sheetAPI.updateUserRole(email, role, name, photo);
-      setAllUsers([...allUsers, existingUser]);
-    }
-    setUser(existingUser);
+    // Tìm xem user đã có trong danh sách từ Sheet chưa
+    let existingUser = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+    
+    // Nếu là email của bạn, mặc định luôn là ADMIN
+    const role = email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() ? 'ADMIN' : (existingUser?.role || 'USER');
+    
+    const loggedInUser: User = { 
+      id: existingUser?.id || Date.now().toString(), 
+      email, 
+      name, 
+      avatar: photo, 
+      role 
+    };
+
+    setUser(loggedInUser);
+
+    // Lưu/Cập nhật thông tin vào Google Sheets
+    await sheetAPI.updateUserRole(email, role, name, photo);
   };
 
   if (loading) return (
-    <div className="h-screen flex flex-col items-center justify-center bg-teal-900 text-white">
-      <div className="w-12 h-12 border-4 border-teal-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="font-black uppercase tracking-widest text-sm">Đang kết nối Database...</p>
+    <div className="h-screen flex flex-col items-center justify-center bg-teal-900">
+      <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      <Header config={config} user={user} onGoogleLogin={handleGoogleLogin} onLogout={() => setUser(null)} onToggleAdmin={() => setShowAdmin(true)} />
-      <main className="max-w-[1440px] mx-auto px-4 py-6">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl lg:text-4xl font-black text-teal-900 uppercase">{config.scheduleTitle}</h2>
-          <div className="inline-block px-4 py-1 bg-teal-100 text-teal-700 rounded-full text-[10px] font-black mt-2">DỮ LIỆU TRỰC TUYẾN</div>
+    <div className="min-h-screen bg-slate-50">
+      <Header 
+        config={config} 
+        user={user} 
+        onGoogleLogin={handleGoogleLogin} 
+        onLogout={() => setUser(null)} 
+        onToggleAdmin={() => setShowAdmin(true)} 
+      />
+      
+      <main className="max-w-[1440px] mx-auto px-4 py-8">
+        <div className="text-center mb-8 uppercase">
+          <h2 className="text-3xl font-black text-teal-900">{config.scheduleTitle}</h2>
+          <p className="text-[10px] font-bold text-teal-600 mt-2 tracking-widest">Hệ thống cập nhật trực tuyến</p>
         </div>
+
         <div className="hidden lg:block">
-          <ScheduleGrid schedule={schedule} user={user} onUpdate={async (newS) => { setSchedule(newS); await sheetAPI.updateSchedule(newS); }} onNotify={async (m, t) => { await sheetAPI.sendNotification(m, t); loadData(); }} />
+          <ScheduleGrid 
+            schedule={schedule} 
+            user={user} 
+            onUpdate={async (newS) => { setSchedule(newS); await sheetAPI.updateSchedule(newS); }} 
+            onNotify={async (m, t) => { await sheetAPI.sendNotification(m, t); loadData(); }} 
+          />
         </div>
+
         <div className="lg:hidden space-y-4">
           <DateStrip activeDay={activeDay} onSelect={setActiveDay} />
-          <ScheduleList dayIndex={activeDay} schedule={schedule} user={user} onUpdate={async (newS) => { setSchedule(newS); await sheetAPI.updateSchedule(newS); }} />
+          <ScheduleList 
+            dayIndex={activeDay} 
+            schedule={schedule} 
+            user={user} 
+            onUpdate={async (newS) => { setSchedule(newS); await sheetAPI.updateSchedule(newS); }} 
+          />
         </div>
       </main>
+
       {showAdmin && (
         <AdminPanel 
-          user={user} headerConfig={config} onUpdateHeader={() => {}} onClose={() => setShowAdmin(false)} 
-          registeredUsers={allUsers} schedule={schedule} ratings={ratings}
-          onUpdateUserRole={async (email, role) => { await sheetAPI.updateUserRole(email, role); loadData(); }}
-          onUpdateSchedule={async (newS) => { setSchedule(newS); await sheetAPI.updateSchedule(newS); }}
-          onNotify={async (m, t) => { await sheetAPI.sendNotification(m, t); loadData(); }}
+          user={user} 
+          headerConfig={config} 
+          onUpdateHeader={() => {}} 
+          onClose={() => setShowAdmin(false)} 
+          registeredUsers={allUsers}
+          schedule={schedule}
+          ratings={ratings}
+          onUpdateUserRole={async (email, role) => {
+            await sheetAPI.updateUserRole(email, role);
+            loadData();
+          }}
+          onUpdateSchedule={async (newS) => {
+            setSchedule(newS);
+            await sheetAPI.updateSchedule(newS);
+          }}
+          onNotify={async (m, t) => {
+            await sheetAPI.sendNotification(m, t);
+            loadData();
+          }}
         />
       )}
     </div>
